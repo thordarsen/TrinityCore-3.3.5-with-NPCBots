@@ -1044,4 +1044,8 @@ enum BotVehicleStrats
     BOT_VEH_STRAT_GENERIC
 };
 
+enum BotMounts
+{
+    BOT_PALLY_MOUNT          = 9712,
+};
 #endif
