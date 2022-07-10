@@ -4927,7 +4927,7 @@ void bot_ai::_updateMountedState()
         {
             if (me->HasAuraType(SPELL_AURA_MOUNTED))
                 me->RemoveAurasByType(SPELL_AURA_MOUNTED);
-
+            if (me-GetBotClass == BOT_CLASS_PALADIN) { mount = PALLYMOUNT; }
             //me->RemoveAurasWithInterruptFlags(AURA_INTERRUPT_FLAG_NOT_MOUNTED);
 
             //if (!GetSpell(mount))
