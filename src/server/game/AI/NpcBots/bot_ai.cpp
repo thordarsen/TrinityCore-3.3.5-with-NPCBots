@@ -4927,18 +4927,19 @@ void bot_ai::_updateMountedState()
         {
             if (me->HasAuraType(SPELL_AURA_MOUNTED))
                 me->RemoveAurasByType(SPELL_AURA_MOUNTED);
-            if (!master->CanFly() && me->GetMapId() !== 3428)
+            //if not flying mount and not in AQ40, get class specific mounts
+            if (!master->CanFly() && me->GetMapId() != 531)
             {
-                switch (me-GetBotClass())
+                switch (me->GetBotClass())
                 {
-                    BOT_CLASS_DARK_RANGER:
+                    case BOT_CLASS_DARK_RANGER:
                         mount = BOT_DARK_RANGER_MOUNT;
                         break;
-                    BOT_CLASS_WARLOCK:
+                    case BOT_CLASS_WARLOCK:
                         if (me->GetLevel()<40) { mount = BOT_WARLOCK_MOUNT; }
                         else { mount = BOT_WARLOCK_FAST_MOUNT; }
                         break;
-                    BOT_CLASS_PALADIN:
+                    case BOT_CLASS_PALADIN:
                         if (me->GetRace()==RACE_BLOODELF)
                         {
                             if (me->GetLevel()<40) { mount = BOT_BE_PALLY_MOUNT; }
@@ -4950,10 +4951,10 @@ void bot_ai::_updateMountedState()
                             else { mount = BOT_ALLI_PALLY_FAST_MOUNT; }
                         }
                         break;
-                    BOT_CLASS_DEATH_KNIGHT:
+                    case BOT_CLASS_DEATH_KNIGHT:
                         mount = BOT_DEATH_KNIGHT_MOUNT;
                         break;
-                    DEFAULT:
+                    default:
                         break;
                 }
             }
