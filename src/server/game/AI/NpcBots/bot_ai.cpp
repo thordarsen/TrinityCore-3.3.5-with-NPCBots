@@ -4927,7 +4927,38 @@ void bot_ai::_updateMountedState()
         {
             if (me->HasAuraType(SPELL_AURA_MOUNTED))
                 me->RemoveAurasByType(SPELL_AURA_MOUNTED);
-            if (me-GetBotClass == BOT_CLASS_PALADIN) { mount = PALLYMOUNT; }
+            if (!master->CanFly() && me->GetMapId() !== 3428)
+            {
+                switch (me-GetBotClass())
+                {
+                    BOT_CLASS_DARK_RANGER:
+                        mount = BOT_DARK_RANGER_MOUNT;
+                        break;
+                    BOT_CLASS_WARLOCK:
+                        if (me->GetLevel()<40) { mount = BOT_WARLOCK_MOUNT; }
+                        else { mount = BOT_WARLOCK_FAST_MOUNT; }
+                        break;
+                    BOT_CLASS_PALADIN:
+                        if (me->GetRace()==RACE_BLOODELF)
+                        {
+                            if (me->GetLevel()<40) { mount = BOT_BE_PALLY_MOUNT; }
+                            else { mount = BOT_BE_PALLY_FAST_MOUNT; }
+                        }
+                        else
+                        {
+                            if (me->GetLevel()<40) { mount = BOT_ALLI_PALLY_MOUNT; }
+                            else { mount = BOT_ALLI_PALLY_FAST_MOUNT; }
+                        }
+                        break;
+                    BOT_CLASS_DEATH_KNIGHT:
+                        mount = BOT_DEATH_KNIGHT_MOUNT;
+                        break;
+                    DEFAULT:
+                        break;
+                }
+            }
+ 
+                    
             //me->RemoveAurasWithInterruptFlags(AURA_INTERRUPT_FLAG_NOT_MOUNTED);
 
             //if (!GetSpell(mount))
