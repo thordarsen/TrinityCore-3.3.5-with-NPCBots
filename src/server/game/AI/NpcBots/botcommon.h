@@ -1046,6 +1046,13 @@ enum BotVehicleStrats
 
 enum BotMounts
 {
-    BOT_PALLY_MOUNT          = 9712,
+    BOT_DARK_RANGER_MOUNT           = 17481, // Deathcharger's Reins
+    BOT_BE_PALLY_FAST_MOUNT         = 34767,
+    BOT_BE_PALLY_MOUNT              = 34769,
+    BOT_ALLI_PALLY_FAST_MOUNT       = 23214,
+    BOT_ALLI_PALLY_MOUNT            = 13819,
+    BOT_DEATHKNIGHT_MOUNT           = 48778,
+    BOT_WARLOCK_FAST_MOUNT          = 23161,
+    BOT_WARLOCK_MOUNT               = 5784
 };
 #endif
