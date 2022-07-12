@@ -4914,7 +4914,7 @@ void bot_ai::_updateMountedState()
     if (master->IsMounted() && !me->IsMounted() && !master->IsInCombat() && !me->IsInCombat() && !me->GetVictim())
     {
         uint32 mount = 0;
-        Unit::AuraEffectList const &mounts = master->GetAuraEffectsByType(SPELL_AURA_MOUNTED);
+        Unit::AuraEffectList const &mounts = master->GetAuraEffectsByType(SPELL_AURA_MOD_INCREASE_MOUNTED_SPEED);
         if (!mounts.empty())
         {
             //Winter Veil addition
@@ -4923,15 +4923,16 @@ void bot_ai::_updateMountedState()
             else
                 mount = mounts.front()->GetId();
         }
-        if (mount)
+               if (mount)
         {
             if (me->HasAuraType(SPELL_AURA_MOUNTED))
                 me->RemoveAurasByType(SPELL_AURA_MOUNTED);
             //if not flying mount and not in AQ40, get class specific mounts
-     
-            if (!master->CanFly() && me->GetMapId() != 531)
+            uint32 mountSpeed = mounts.front()->GetAmount();
+
+            if (!master->CanFly() && me->GetMapId() != 531 && mountSpeed < 130)
             {
-                uint32 mountSpeed = GetAuraEffect(mount, SPELL_AURA_MOD_INCREASE_MOUNTED_SPEED)->GetAmount();
+
                 switch (me->GetBotClass())
                 {
                     case BOT_CLASS_DARK_RANGER:
@@ -4960,6 +4961,7 @@ void bot_ai::_updateMountedState()
                         break;
                 }
             }
+
  
                     
             //me->RemoveAurasWithInterruptFlags(AURA_INTERRUPT_FLAG_NOT_MOUNTED);
