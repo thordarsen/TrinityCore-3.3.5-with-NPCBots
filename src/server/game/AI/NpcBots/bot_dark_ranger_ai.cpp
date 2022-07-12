@@ -31,7 +31,8 @@ enum DarkRangerBaseSpells
     AUTO_SHOT_1                         = 75,
     BLACK_ARROW_1                       = SPELL_BLACK_ARROW,
     DRAIN_LIFE_1                        = SPELL_DRAIN_LIFE,
-    SILENCE_1                           = SPELL_SILENCE
+    SILENCE_1                           = SPELL_SILENCE,
+    TRANQ_SHOT_1                        = 19801
 };
 enum DarkRangerPassives
 {
@@ -54,8 +55,12 @@ static const uint32 Darkranger_spells_damage_arr[] =
 static const uint32 Darkranger_spells_cc_arr[] =
 { SILENCE_1 };
 
+static const uint32 Darkranger_spells_support_arr[] =
+{ TRANQ_SHOT_1 };
+
 static const std::vector<uint32> Darkranger_spells_damage(FROM_ARRAY(Darkranger_spells_damage_arr));
 static const std::vector<uint32> Darkranger_spells_cc(FROM_ARRAY(Darkranger_spells_cc_arr));
+static const std::vector<uint32> Darkranger_spells_support(FROM_ARRAY(Darkranger_spells_support_arr));
 
 class dark_ranger_bot : public CreatureScript
 {
@@ -185,7 +190,8 @@ public:
             StartAttack(opponent, IsMelee());
 
             Counter(diff);
-
+            CheckTranquil(diff);
+            
             CheckBlackArrow(diff);
 
             MoveBehind(opponent);
@@ -248,7 +254,38 @@ public:
                     return;
             }
         }
+        
+        void CheckTranquil(uint32 diff)
+        {
+            if (!IsSpellReady(TRANQ_SHOT_1, diff) || Rand() > 20)
+                return;
 
+            //First check current target
+            if (me->GetDistance(opponent) > 5 && me->GetDistance(opponent) < CalcSpellMaxRange(TRANQ_SHOT_1) &&
+                !opponent->IsImmunedToSpell(sSpellMgr->GetSpellInfo(TRANQ_SHOT_1), me))
+            {
+                AuraApplication const* aurApp;
+                SpellInfo const* spellInfo;
+                Unit::AuraMap const &auras = opponent->GetOwnedAuras();
+                for (Unit::AuraMap::const_iterator itr = auras.begin(); itr != auras.end(); ++itr)
+                {
+                    spellInfo = itr->second->GetSpellInfo();
+                    if (spellInfo->Dispel != DISPEL_MAGIC && spellInfo->Dispel != DISPEL_ENRAGE) continue;
+                    if (spellInfo->Attributes & (SPELL_ATTR0_PASSIVE | SPELL_ATTR0_HIDDEN_CLIENTSIDE)) continue;
+                    //if (spellInfo->AttributesEx & SPELL_ATTR1_DONT_DISPLAY_IN_AURA_BAR) continue;
+                    aurApp = itr->second->GetApplicationOfTarget(opponent->GetGUID());
+                    if (aurApp && aurApp->IsPositive())
+                    {
+                        if (doCast(opponent, GetSpell(TRANQ_SHOT_1)))
+                            return;
+                    }
+                }
+            }
+
+            Unit* target = FindTranquilTarget(5, CalcSpellMaxRange(TRANQ_SHOT_1));
+            if (target && doCast(target, GetSpell(TRANQ_SHOT_1)))
+                return;
+        }
         void ApplyClassSpellCritMultiplierAll(Unit const* /*victim*/, float& /*crit_chance*/, SpellInfo const* /*spellInfo*/, SpellSchoolMask /*schoolMask*/, WeaponAttackType /*attackType*/) const override
         {
         }
@@ -569,6 +606,7 @@ public:
             InitSpellMap(BLACK_ARROW_1);
             InitSpellMap(DRAIN_LIFE_1);
             InitSpellMap(SILENCE_1);
+            InitSpellMap(TRANQ_SHOT_1);
         }
 
         void ApplyClassPassives() const override
@@ -587,10 +625,10 @@ public:
         //{
         //    return &Darkranger_spells_heal;
         //}
-        //std::vector<uint32> const* GetSupportSpellsList() const override
-        //{
-        //    return &Darkranger_spells_support;
-        //}
+        std::vector<uint32> const* GetSupportSpellsList() const override
+        {
+            return &Darkranger_spells_support;
+        }
     private:
         ObjectGuid _blackArrowKillGUID;
         typedef std::set<Unit*> Summons;
