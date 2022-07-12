@@ -12,6 +12,16 @@
 NpcBot Pet System by Trickerer (https://github.com/trickerer/Trinity-Bots; onlysuffering@gmail.com)
 */
 
+/*
+Modding to allow player pet summons
+TODO
+done - getownerclass function
+done - replace GetBotClass
+Other GetBotAI usage
+fix roles
+warlock follow angles
+*/
+
 static constexpr uint32 SHAMAN_MAX_PET_POSITIONS = 2;
 static constexpr uint32 DRUID_MAX_PET_POSITIONS = 3;
 static constexpr uint32 DK_MAX_PET_POSITIONS = 10;
@@ -99,7 +109,7 @@ uint16 bot_pet_ai::Rand() const
 //0-178
 void bot_pet_ai::GenerateRand() const
 {
-    __rand = urand(0, IAmFree() ? 100 : 100 + (petOwner->GetBotOwner()->GetNpcBotsCount() - 1) * 2);
+    __rand = urand(0, IAmFree() ? 100 : 100 + (petOwner->GetBotOwner()->GetNpcBotsCount() - 1) * 2);  //[check parent interactions]
 }
 
 bool bot_pet_ai::_checkImmunities(Unit const* target, SpellInfo const* spellInfo) const
@@ -115,16 +125,17 @@ void bot_pet_ai::_calculatePos(Position& pos) const
         petOwner->GetPosition(x, y, z);
     //relative angle
     float o = petOwner->GetOrientation() + PET_FOLLOW_ANGLE;
-    uint8 posNum = petOwner->GetBotAI()->GetPetPositionNumber(me);
-    if (petOwner->GetBotClass() == BOT_CLASS_DEATH_KNIGHT)
+    uint8 petOwnerClass = GetPetOwnerClass();
+    uint8 posNum = petOwner->GetBotAI()->GetPetPositionNumber(me); //[check parent interactions]
+    if (petOwnerClass == BOT_CLASS_DEATH_KNIGHT)
         o += DKPetPositionAnglesByPosNumber[posNum];
-    else if (petOwner->GetBotClass() == BOT_CLASS_DRUID)
+    else if (petOwnerClass == BOT_CLASS_DRUID)
         o += DruidPetPositionAnglesByPosNumber[posNum];
-    else if (petOwner->GetBotClass() == BOT_CLASS_SHAMAN)
+    else if (petOwnerClass == BOT_CLASS_SHAMAN)
         o += ShamanPetPositionAnglesByPosNumber[posNum];
-    else if (petOwner->GetBotClass() == BOT_CLASS_DARK_RANGER)
+    else if (petOwnerClass == BOT_CLASS_DARK_RANGER)
         o += DarkRangerPetPositionAnglesByPosNumber[posNum];
-    else if (petOwner->GetBotClass() == BOT_CLASS_NECROMANCER)
+    else if (petOwnerClass == BOT_CLASS_NECROMANCER)
         o += NecromancerPetPositionAnglesByPosNumber[posNum];
 
     o = Position::NormalizeOrientation(o);
@@ -149,7 +160,7 @@ void bot_pet_ai::SetBotCommandState(uint8 st, bool force, Position* newpos)
         return;
 
     if ((st & BOT_COMMAND_FOLLOW) && !IsChanneling() &&
-        ((!me->isMoving() && !IsCasting() && petOwner->GetBotOwner()->IsAlive()) || force))
+        ((!me->isMoving() && !IsCasting() && petOwner->GetBotOwner()->IsAlive()) || force))  //[check parent interactions] [check out petOwner->GetBotOwner()]
     {
         if (CCed(me, true)) return;
         if (me->isMoving() && Rand() > 10) return;
@@ -246,7 +257,7 @@ void bot_pet_ai::CureGroup(uint32 cureSpell, uint32 diff)
             if (_canCureTarget(u, cureSpell))
                 targets.push_back(u);
         }
-
+//[check parent interactions]
         for (Unit::ControlList::const_iterator itr = petOwner->GetBotOwner()->m_Controlled.begin(); itr != petOwner->GetBotOwner()->m_Controlled.end(); ++itr)
         {
             u = *itr;
@@ -384,6 +395,7 @@ uint32 bot_pet_ai::GetData(uint32 data) const
 
 void bot_pet_ai::SetPetStats(bool force)
 {
+    uint8 petOwnerClass = GetPetOwnerClass();
     switch (myType)
     {
         //warlock
@@ -487,7 +499,7 @@ void bot_pet_ai::SetPetStats(bool force)
     }
 
     int32 spdtotal;
-    switch (petOwner->GetBotClass())
+    switch (petOwnerClass)     //[check parent interactions]
     {
         case BOT_CLASS_WARLOCK:
         case BOT_CLASS_PRIEST:
@@ -537,7 +549,7 @@ void bot_pet_ai::SetPetStats(bool force)
         if (pInfo)
         {
             me->SetCreateHealth(pInfo->health);
-            if (petOwner->GetBotClass() == BOT_CLASS_HUNTER) //hunter pet use focus
+            if (petOwnerClass == BOT_CLASS_HUNTER) //hunter pet use focus //[check parent interactions]
             {
                 //prevent from modifying powers inside
                 if (me->GetPowerType() != POWER_FOCUS)
@@ -739,7 +751,7 @@ void bot_pet_ai::SetPetStats(bool force)
             //atpower += 2 * me->GetTotalStatValue(STAT_STRENGTH) - 20.0f;
             break;
     }
-    switch (petOwner->GetBotClass())
+    switch (petOwnerClass) //[check parent interactions]
     {
         case BOT_CLASS_HUNTER:
             atpower += (level >= 80 ? 0.338f : 0.22f) * petOwner->GetTotalAttackPowerValue(RANGED_ATTACK);
@@ -776,12 +788,12 @@ void bot_pet_ai::SetPetStats(bool force)
     myarmor = std::max<uint32>(myarmor, level*50);
     myarmor += me->GetStat(STAT_AGILITY)*2 + petOwner->GetArmor()*0.35f;
     //armor bonuses
-    if (petOwner->GetBotClass() == BOT_CLASS_HUNTER)
+    if (petOwnerClass == BOT_CLASS_HUNTER)
     {
         //5% innate
         myarmor += myarmor / 20;
         //Thick Hide
-        if (level >= 15)
+        if (level >= 15)              //[check parent talent tree?]
             myarmor += myarmor / 5;
         //Natural Armor
         if (level >= 20)
@@ -790,7 +802,7 @@ void bot_pet_ai::SetPetStats(bool force)
         if (level >= 32)
             myarmor += myarmor / 10;
     }
-    if (petOwner->GetBotClass() == BOT_CLASS_DARK_RANGER || petOwner->GetBotClass() == BOT_CLASS_NECROMANCER)
+    if (petOwnerClass == BOT_CLASS_DARK_RANGER || petOwnerClass == BOT_CLASS_NECROMANCER)  //[check parent interactions]
     {
         //even though skeletons have shields their armor needs to be very low
         myarmor = myarmor / 4;
@@ -801,7 +813,7 @@ void bot_pet_ai::SetPetStats(bool force)
     for (uint8 i = SPELL_SCHOOL_HOLY; i != MAX_SPELL_SCHOOL; ++i)
     {
         float petResist;
-        switch (petOwner->GetBotClass())
+        switch (petOwnerClass)           //[check parent interactions]
         {
             case BOT_CLASS_DREADLORD:
                 petResist = (petOwner->GetBotAI()->GetBotResistanceBonus(SpellSchools(i)) + petOwner->GetResistance(SpellSchools(i)))*2.0f;
@@ -821,7 +833,7 @@ void bot_pet_ai::SetPetStats(bool force)
     if (AuraEffect* critbonus = me->GetAuraEffect(CRITBONUS_PASSIVE, 1, me->GetGUID()))
     {
         int32 amount = 5; //base crit
-        switch (petOwner->GetBotClass())
+        switch (petOwnerClass)        //[check parent interactions]
         {
             case BOT_CLASS_WARLOCK:
                 //Demonic Tactics part 1 (pet)
@@ -866,7 +878,7 @@ void bot_pet_ai::SetPetStats(bool force)
             default:
                 break;
         }
-        switch (petOwner->GetBotClass())
+        switch (petOwnerClass)         //[check parent interactions]
         {
             case BOT_CLASS_WARLOCK:
                 //Demonic Tactics part 2 (pet)
@@ -905,7 +917,7 @@ void bot_pet_ai::SetPetStats(bool force)
             default:
                 break;
         }
-        switch (petOwner->GetBotClass())
+        switch (petOwnerClass)  //[check parent interactions]
         {
             case BOT_CLASS_WARLOCK:
                 //Unholy Power
@@ -953,7 +965,7 @@ void bot_pet_ai::SetPetStats(bool force)
             default:
                 break;
         }
-        switch (petOwner->GetBotClass())
+        switch (petOwnerClass) //[check parent interactions]
         {
             case BOT_CLASS_WARLOCK:
                 //Unholy Power
@@ -988,7 +1000,7 @@ void bot_pet_ai::SetPetStats(bool force)
     if (AuraEffect* spelldam = me->GetAuraEffect(SPELLDAMAGE_PASSIVE, 0, me->GetGUID()))
     {
         int32 amount = 0;
-        switch (petOwner->GetBotClass())
+        switch (petOwnerClass)
         {
             case BOT_CLASS_HUNTER:
                 amount += int32(petOwner->GetTotalAttackPowerValue(RANGED_ATTACK) * (level >= 80 ? 0.18f : 0.1287f));
@@ -1034,7 +1046,7 @@ void bot_pet_ai::SetPetStats(bool force)
                 amount += level >= 20 ? 200 : 0;
                 break;
             case BOT_PET_AWATER_ELEMENTAL:
-                amount += petOwner->GetBotAI()->GetHaste();
+                amount += petOwner->GetBotAI()->GetHaste();  //[check parent interactions]
                 break;
             default:
                 break;
@@ -1046,19 +1058,19 @@ void bot_pet_ai::SetPetStats(bool force)
     {
         int32 amount = 0;
 
-        if (petOwner->GetBotClass() == BOT_CLASS_WARLOCK)
+        if (petOwnerClass == BOT_CLASS_WARLOCK)  //[check parent interactions]
         {
             //Demonic Resilience part 2
             if (level >= 40)
                 amount += 15;
         }
-        if (petOwner->GetBotClass() == BOT_CLASS_HUNTER)
+        if (petOwnerClass == BOT_CLASS_HUNTER)  //[check parent interactions]
         {
             //Great Resistance (everything)
             if (level >= 44)
                 amount += 15;
         }
-        if (petOwner->GetBotClass() == BOT_CLASS_DREADLORD)
+        if (petOwnerClass == BOT_CLASS_DREADLORD)  //[check parent interactions]
         {
             amount += 25;
         }
@@ -1067,53 +1079,53 @@ void bot_pet_ai::SetPetStats(bool force)
     }
     //hp
     float stamValue = me->GetTotalStatValue(STAT_STAMINA) - me->GetCreateStat(STAT_STAMINA);
-    switch (petOwner->GetBotClass())
+    switch (petOwnerClass)  //[check parent interactions]
     {
         case BOT_CLASS_HUNTER:
-            stamValue += (level >= 80 ? 0.63f : 0.4f) * petOwner->GetBotAI()->GetTotalBotStat(BOT_STAT_MOD_STAMINA);
+            stamValue += (level >= 80 ? 0.63f : 0.4f) * petOwner->GetBotAI()->GetTotalBotStat(BOT_STAT_MOD_STAMINA);//[check parent interactions]
             break;
         case BOT_CLASS_WARLOCK:
-            stamValue += 0.75f * petOwner->GetBotAI()->GetTotalBotStat(BOT_STAT_MOD_STAMINA);
+            stamValue += 0.75f * petOwner->GetBotAI()->GetTotalBotStat(BOT_STAT_MOD_STAMINA);//[check parent interactions]
             break;
         case BOT_CLASS_DEATH_KNIGHT:
             switch (myType)
             {
                 case BOT_PET_GHOUL:
-                    stamValue += 0.88f * petOwner->GetBotAI()->GetTotalBotStat(BOT_STAT_MOD_STAMINA);
+                    stamValue += 0.88f * petOwner->GetBotAI()->GetTotalBotStat(BOT_STAT_MOD_STAMINA);//[check parent interactions]
                     break;
                 default:
-                    stamValue += 0.3f * petOwner->GetBotAI()->GetTotalBotStat(BOT_STAT_MOD_STAMINA);
+                    stamValue += 0.3f * petOwner->GetBotAI()->GetTotalBotStat(BOT_STAT_MOD_STAMINA);//[check parent interactions]
                     break;
             }
             break;
         case BOT_CLASS_SHAMAN:
-            stamValue += 0.75f * petOwner->GetBotAI()->GetTotalBotStat(BOT_STAT_MOD_STAMINA);
+            stamValue += 0.75f * petOwner->GetBotAI()->GetTotalBotStat(BOT_STAT_MOD_STAMINA);//[check parent interactions]
             break;
         case BOT_CLASS_MAGE:
-            stamValue += 0.75f * petOwner->GetBotAI()->GetTotalBotStat(BOT_STAT_MOD_STAMINA);
+            stamValue += 0.75f * petOwner->GetBotAI()->GetTotalBotStat(BOT_STAT_MOD_STAMINA);//[check parent interactions]
             break;
         case BOT_CLASS_DRUID:
-            stamValue += 0.45f * petOwner->GetBotAI()->GetTotalBotStat(BOT_STAT_MOD_STAMINA);
+            stamValue += 0.45f * petOwner->GetBotAI()->GetTotalBotStat(BOT_STAT_MOD_STAMINA);//[check parent interactions]
             break;
         case BOT_CLASS_ARCHMAGE:
-            stamValue += 2.50f * petOwner->GetBotAI()->GetTotalBotStat(BOT_STAT_MOD_STAMINA);
+            stamValue += 2.50f * petOwner->GetBotAI()->GetTotalBotStat(BOT_STAT_MOD_STAMINA);//[check parent interactions]
             break;
         case BOT_CLASS_DREADLORD:
-            stamValue += 2.50f * petOwner->GetBotAI()->GetTotalBotStat(BOT_STAT_MOD_STAMINA);
+            stamValue += 2.50f * petOwner->GetBotAI()->GetTotalBotStat(BOT_STAT_MOD_STAMINA);//[check parent interactions]
             break;
         case BOT_CLASS_DARK_RANGER:
             switch (myType)
             {
                 case BOT_PET_DARK_MINION_ELITE:
-                    stamValue += 1.0f * petOwner->GetBotAI()->GetTotalBotStat(BOT_STAT_MOD_STAMINA);
+                    stamValue += 1.0f * petOwner->GetBotAI()->GetTotalBotStat(BOT_STAT_MOD_STAMINA);//[check parent interactions]
                     break;
                 default:
-                    stamValue += 0.8f * petOwner->GetBotAI()->GetTotalBotStat(BOT_STAT_MOD_STAMINA);
+                    stamValue += 0.8f * petOwner->GetBotAI()->GetTotalBotStat(BOT_STAT_MOD_STAMINA);//[check parent interactions]
                     break;
             }
             break;
         case BOT_CLASS_NECROMANCER:
-            stamValue += 0.75f * petOwner->GetBotAI()->GetTotalBotStat(BOT_STAT_MOD_STAMINA);
+            stamValue += 0.75f * petOwner->GetBotAI()->GetTotalBotStat(BOT_STAT_MOD_STAMINA);//[check parent interactions]
             break;
         default:
             break;
@@ -1129,7 +1141,7 @@ void bot_pet_ai::SetPetStats(bool force)
         default:                 stamMult = 10.f;  break;
     }
     //stam bonuses
-    if (petOwner->GetBotClass() == BOT_CLASS_WARLOCK)
+    if (petOwnerClass == BOT_CLASS_WARLOCK)     //[check parent interactions]
     {
         //Fel Vitality (pet) part 1
         if (level >= 15)
@@ -1138,7 +1150,7 @@ void bot_pet_ai::SetPetStats(bool force)
         if (myType == BOT_PET_VOIDWALKER && level >= 15)
             stamValue *= 1.2f;
     }
-    if (petOwner->GetBotClass() == BOT_CLASS_HUNTER)
+    if (petOwnerClass == BOT_CLASS_HUNTER) //[check parent interactions]
     {
         //Endurance Training
         if (level >= 10)
@@ -1154,7 +1166,7 @@ void bot_pet_ai::SetPetStats(bool force)
     me->SetStat(STAT_STAMINA, int32(stamValue));
     float m_totalhp = stamValue * stamMult + me->GetCreateHealth() + (/*IAmFree() ? level * 125.f :*/ 0); //+10000/+0 hp at 80
     //hp bonuses
-    if (petOwner->GetBotClass() == BOT_CLASS_HUNTER)
+    if (petOwnerClass == BOT_CLASS_HUNTER)  //[check parent interactions]
     {
         //Innate 5%
         m_totalhp *= 1.05f;
@@ -1181,7 +1193,7 @@ void bot_pet_ai::SetPetStats(bool force)
             default:                 intMult = 15.f;  break;
         }
         //int/mana bonuses
-        if (petOwner->GetBotClass() == BOT_CLASS_WARLOCK)
+        if (petOwnerClass == BOT_CLASS_WARLOCK)
         {
             //Fel Vitality (pet) part 2
             if (level >= 15)
@@ -1212,7 +1224,7 @@ void bot_pet_ai::SetPetStats(bool force)
 //This means that anyone who attacks party will be attacked by whole bot party (see GetTarget())
 void bot_pet_ai::OnOwnerDamagedBy(Unit* attacker)
 {
-    if (petOwner->GetBotAI()->HasBotCommandState(BOT_COMMAND_MASK_UNMOVING))
+    if (petOwner->GetBotAI()->HasBotCommandState(BOT_COMMAND_MASK_UNMOVING)) //[check parent interactions]
         return;
     if (me->GetVictim() && (!IAmFree() || me->GetDistance(me->GetVictim()) < me->GetDistance(attacker)))
         return;
@@ -1231,7 +1243,7 @@ bool bot_pet_ai::IsPetMelee() const
 
 uint8 bot_pet_ai::Spec() const
 {
-    return petOwner->GetBotAI()->GetSpec();
+    return petOwner->GetBotAI()->GetSpec(); //[check parent interactions]
 }
 
 //ISINBOTPARTY
@@ -1240,7 +1252,7 @@ uint8 bot_pet_ai::Spec() const
 bool bot_pet_ai::IsInBotParty(Unit const* unit) const
 {
     if (!unit) return false;
-    if (unit == petOwner->GetBotOwner() || unit == me || unit == petOwner) return true;
+    if (unit == petOwner->GetBotOwner() || unit == me || unit == petOwner) return true; //[check parent interactions]
 
     if (IAmFree())
     {
@@ -1303,13 +1315,13 @@ void bot_pet_ai::RefreshAura(uint32 spellId, int8 count, Unit* target) const
     if (count < 0 || count > 10)
     {
         TC_LOG_ERROR("entities.player", "bot_pet_ai::RefreshAura(): count is out of bounds (%i) for bot %s (botclass: %u, entry: %u)",
-            int32(count), me->GetName().c_str(), uint32(petOwner->GetBotClass()), me->GetEntry());
+            int32(count), me->GetName().c_str(), uint32(GetPetOwnerClass()), me->GetEntry());
         return;
     }
     if (!spellId)
     {
         TC_LOG_ERROR("entities.player", "bot_pet_ai::RefreshAura(): spellId is 0 for bot %s (botclass: %u, entry: %u)",
-            me->GetName().c_str(), uint32(petOwner->GetBotClass()), me->GetEntry());
+            me->GetName().c_str(), uint32(GetPetOwnerClass()), me->GetEntry());
         return;
     }
 
@@ -1317,7 +1329,7 @@ void bot_pet_ai::RefreshAura(uint32 spellId, int8 count, Unit* target) const
     if (!spellInfo)
     {
         TC_LOG_ERROR("entities.player", "bot_pet_ai::RefreshAura(): Invalid spellInfo for spell %u! Bot - %s (botclass: %u, entry: %u)",
-            spellId, me->GetName().c_str(), uint32(petOwner->GetBotClass()), me->GetEntry());
+            spellId, me->GetName().c_str(), uint32(GetPetOwnerClass()), me->GetEntry());
         return;
     }
 
@@ -2443,3 +2455,11 @@ uint8 bot_pet_ai::GetManaPCT(Unit const* u)
         return 100;
     return (u->GetPower(POWER_MANA)*10/(1 + u->GetMaxPower(POWER_MANA)/10));
 }
+
+uint8 GetPetOwnerClass()
+{    
+    if (petOwner->GetTypeId() == TYPEID_PLAYER)
+    {   return petOwner->GetClass();    }
+    else {  petOwner->GetBotClass();    }
+}    
+
