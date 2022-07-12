@@ -70,6 +70,7 @@ class bot_pet_ai : public CreatureAI
         void ApplyBotDamageMultiplierSpell(int32& damage, SpellNonMeleeDamage& damageinfo, SpellInfo const* spellInfo, WeaponAttackType attackType, bool crit) const;
 
         uint8 GetPetOwnerClass();
+        Player* GetPlayerOwner();
 
     protected:
         explicit bot_pet_ai(Creature* creature);
