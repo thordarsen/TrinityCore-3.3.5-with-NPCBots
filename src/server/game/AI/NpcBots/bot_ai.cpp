@@ -4923,14 +4923,14 @@ void bot_ai::_updateMountedState()
             else
                 mount = mounts.front()->GetId();
         }
-               if (mount)
+        if (mount)
         {
             if (me->HasAuraType(SPELL_AURA_MOUNTED))
                 me->RemoveAurasByType(SPELL_AURA_MOUNTED);
             //if not flying mount and not in AQ40, get class specific mounts
             uint32 mountSpeed = mounts.front()->GetAmount();
 
-            if (!master->CanFly() && me->GetMapId() != 531 && mountSpeed < 130)
+            if (!master->CanFly() && me->GetMapId() != 531 && (mountSpeed < 130 && mountSpeed > 30))
             {
 
                 switch (me->GetBotClass())
