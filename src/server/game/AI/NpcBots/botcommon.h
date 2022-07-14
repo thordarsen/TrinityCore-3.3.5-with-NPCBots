@@ -1046,6 +1046,7 @@ enum BotVehicleStrats
 
 enum BotMounts
 {
+    // Class specific mounts
     BOT_DARK_RANGER_MOUNT           = 17481, // Deathcharger's Reins
     BOT_BE_PALLY_FAST_MOUNT         = 34767,
     BOT_BE_PALLY_MOUNT              = 34769,
@@ -1053,6 +1054,27 @@ enum BotMounts
     BOT_ALLI_PALLY_MOUNT            = 13819,
     BOT_DEATH_KNIGHT_MOUNT          = 48778,
     BOT_WARLOCK_FAST_MOUNT          = 23161,
-    BOT_WARLOCK_MOUNT               = 5784
+    BOT_WARLOCK_MOUNT               = 5784,
+    // Racial mounts (if no class mount)
+    BOT_ORC_FAST_MOUNT              = 23251, //Swift Timber Wolf
+    BOT_ORC_MOUNT                   = 6653,  //Dire Wolf
+    BOT_TROLL_FAST_MOUNT            = 23241, //Swift Blue Raptor
+    BOT_TROLL_MOUNT                 = 8395,  //Emerald Raptor
+    BOT_TAUREN_FAST_MOUNT           = 23247, //Swift White Kodo
+    BOT_TAUREN_MOUNT                = 18989, //Gray Kodo
+    BOT_UNDEAD_FAST_MOUNT           = 23246, //Purple Skeletal Warhorse
+    BOT_UNDEAD_MOUNT                = 17462, //Red Skeletal Horse
+    BOT_BLOOD_ELF_FAST_MOUNT        = 33660, //Swift Pink Hawkstrider
+    BOT_BLOOD_ELF_MOUNT             = 35018, //Purple Hawkstrider
+    BOT_HUMAN_FAST_MOUNT            = 23227, //Swift Palomino
+    BOT_HUMAN_MOUNT                 = 472,   //Pinto
+    BOT_DWARF_FAST_MOUNT            = 23239, //Swift Gray Ram
+    BOT_DWARF_MOUNT                 = 6777,  //Gray Ram
+    BOT_GNOME_FAST_MOUNT            = 23223, //Swift White Mechanostrider
+    BOT_GNOME_MOUNT                 = 10873, //Red Mechanostrider
+    BOT_NIGHT_ELF_FAST_MOUNT        = 23338, //Swift Stormsaber
+    BOT_NIGHT_ELF_MOUNT             = 8394,  //Striped Frostsaber
+    BOT_DRAENAI_FAST_MOUNT          = 35714, //Great Purple Elekk
+    BOT_DRAENAI_MOUNT               = 35710  //Gray Elekk
 };
 #endif
