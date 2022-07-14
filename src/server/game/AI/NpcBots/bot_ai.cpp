@@ -4947,25 +4947,53 @@ void bot_ai::_updateMountedState()
                         mount = BOT_DARK_RANGER_MOUNT;
                         break;
                     case BOT_CLASS_WARLOCK:
-                        if (mountSpeed<80) { mount = BOT_WARLOCK_MOUNT; }
-                        else { mount = BOT_WARLOCK_FAST_MOUNT; }
+                        mount = (mountSpeed<80) ? BOT_WARLOCK_MOUNT : BOT_WARLOCK_FAST_MOUNT;
                         break;
                     case BOT_CLASS_PALADIN:
                         if (me->GetRace()==RACE_BLOODELF)
-                        {
-                            if (mountSpeed<80) { mount = BOT_BE_PALLY_MOUNT; }
-                            else { mount = BOT_BE_PALLY_FAST_MOUNT; }
-                        }
+                            mount = (mountSpeed<80) ? BOT_BE_PALLY_MOUNT : BOT_BE_PALLY_FAST_MOUNT;
                         else
-                        {
-                            if (mountSpeed<80) { mount = BOT_ALLI_PALLY_MOUNT; }
-                            else { mount = BOT_ALLI_PALLY_FAST_MOUNT; }
-                        }
+                            mount = (mountSpeed<80) ? BOT_ALLI_PALLY_MOUNT : BOT_ALLI_PALLY_FAST_MOUNT;
                         break;
                     case BOT_CLASS_DEATH_KNIGHT:
                         mount = BOT_DEATH_KNIGHT_MOUNT;
                         break;
                     default:
+                        switch(me->GetRace())
+                        {
+                            case RACE_ORC:
+                                mount = (mountSpeed<80) ? BOT_ORC_MOUNT : BOT_ORC_FAST_MOUNT;
+                                break;
+                            case RACE_TROLL:
+                                mount = (mountSpeed<80) ? BOT_TROLL_MOUNT : BOT_TROLL_FAST_MOUNT;
+                                break;
+                            case RACE_TAUREN:
+                                mount = (mountSpeed<80) ? BOT_TAUREN_MOUNT : BOT_TAUREN_FAST_MOUNT;
+                                break;
+                            case RACE_UNDEAD:
+                                mount = (mountSpeed<80) ? BOT_UNDEAD_MOUNT : BOT_UNDEAD_FAST_MOUNT;
+                                break;
+                            case RACE_BLOODELF:
+                                mount = (mountSpeed<80) ? BOT_BLOODELF_MOUNT : BOT_BLOODELF_FAST_MOUNT;
+                                break;
+                            case RACE_HUMAN:
+                                mount = (mountSpeed<80) ? BOT_HUMAN_MOUNT : BOT_HUMAN_FAST_MOUNT;
+                                break;
+                            case RACE_DWARF:
+                                mount = (mountSpeed<80) ? BOT_DWARF_MOUNT : BOT_DWARF_FAST_MOUNT;
+                                break;
+                            case RACE_GNOME:
+                                mount = (mountSpeed<80) ? BOT_GNOME_MOUNT : BOT_GNOME_FAST_MOUNT;
+                                break;
+                            case RACE_NIGHTELF:
+                                mount = (mountSpeed<80) ? BOT_NIGHTELF_MOUNT : BOT_NIGHTELF_FAST_MOUNT;
+                                break;
+                            case RACE_DRAENEI:
+                                mount = (mountSpeed<80) ? BOT_DRAENEI_MOUNT : BOT_DRAENEI_FAST_MOUNT;
+                                break;
+                            default:
+                                break;
+                        }
                         break;
                 }
             }
